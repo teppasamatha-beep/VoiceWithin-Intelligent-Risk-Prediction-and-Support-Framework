@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VoiceWithin — Journal Entry</title>
+  <style>
+    :root {
+      --bg: #f3f6f7;
+      --nav: #234;
+      --card-bg: #ffffff;
+      --accent: #234;
+      --shadow: 0 8px 20px rgba(33,66,74,0.12);
+      --radius: 12px;
+      --btn-bg: #234;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial;
+      background-color: #234;
+    }
+
+    /* ✅ Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: #ffffff;
+      color: #234;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar-left {
+      font-size: 20px;
+      font-weight: bold;
+      font-style: italic;
+      color: #234;
+    }
+
+    .navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;              /* spacing between items */
+  margin-right: 40px;     /* shifts group a bit left */
+}
+
+
+    .navbar-right a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #234;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .navbar-right a:hover {
+      color: #234;
+    }
+
+    /* Dropdown Base */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: #fff;
+      min-width: 180px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 1;
+      text-align: left;
+    }
+
+    .dropdown-content a {
+      display: block;
+      padding: 12px 18px;
+      color: #234;
+      text-decoration: none;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .dropdown-content a:hover {
+      background-color: #f1f1f1;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Profile Icon */
+    .profile-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: #234;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      margin-left: 20px;
+      cursor: pointer;
+    }
+    /* Main Layout */
+    .page {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 100px 20px 28px; /* top padding to avoid navbar overlap */
+      min-height: 100%;
+    }
+
+    .journal-wrap {
+      width: 900px;
+      max-width: 96%;
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--card-bg);
+      width: 100%;
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .card .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e6eef0;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .title-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-left h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #234;
+    }
+
+    .date {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .moods {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mood-btn {
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 18px;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+    }
+
+    .mood-btn.selected {
+      background: #f1f9f9;
+      border-color: #cde9e9;
+    }
+
+    .editor {
+      min-height: 210px;
+      border: 1px solid #e6eef0;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .editor textarea {
+      width: 100%;
+      height: 170px;
+      border: 0;
+      outline: none;
+      resize: none;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .left-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .camera {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(33,66,74,0.06);
+      cursor: pointer;
+    }
+
+    .save-btn {
+      background: var(--btn-bg);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 6px 12px rgba(37,74,82,0.18);
+    }
+
+    .title-input {
+      border: 0;
+      outline: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .previews {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .preview-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid #e6eef0;
+    }
+
+    @media (max-width: 520px) {
+      .journal-wrap { padding: 12px; }
+      .card { padding: 12px; }
+      .editor textarea { height: 140px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <div class="navbar-left">VoiceWithin</div>
+    <div class="navbar-right">
+      <a href="/survey">Test</a>
+
+      <div class="dropdown">
+        <a>Journal ▾</a>
+        <div class="dropdown-content">
+          <a href="/history">History</a>
+          <a href="/journal">New Entry</a>
+        </div>
+      </div>
+
+      <a href="/chatbot">AI</a>
+
+      <div class="dropdown">
+        <div class="profile-icon">👤</div>
+        <div class="dropdown-content">
+          <a href="/improvement">Dashboard</a>
+          <a href="/login">Log out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="journal-wrap">
+      <div class="card" role="region" aria-label="Journal entry">
+        <form id="entryForm" action="/add" method="POST" enctype="multipart/form-data">
+          <div class="title-row">
+            <div class="title-left">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input id="title" name="title" class="title-input" placeholder="Title" />
+              </div>
+              <div id="entry-date" class="date">--</div>
+            </div>
+
+            <div class="moods" aria-label="mood selection">
+              <button type="button" class="mood-btn" data-mood="neutral" title="Neutral">😐</button>
+              <button type="button" class="mood-btn" data-mood="happy" title="Happy">😊</button>
+              <button type="button" class="mood-btn" data-mood="smile" title="Smiling">😄</button>
+              <button type="button" class="mood-btn" data-mood="angry" title="Angry">😡</button>
+              <button type="button" class="mood-btn" data-mood="sad" title="Sad">😭</button>
+              <input type="hidden" name="mood" id="moodInput" />
+            </div>
+          </div>
+
+          <div class="editor">
+            <textarea id="content" name="content" placeholder="Write something......"></textarea>
+          </div>
+
+          <div class="controls">
+            <div class="left-controls">
+              <label for="imgupload" class="camera" title="Upload image">
+                <!-- camera svg -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 17a4 4 0 100-8 4 4 0 000 8z" stroke="#21424a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 21H3V7h4.2l1.6-2h6.4l1.6 2H21z" stroke="#21424a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </label>
+              <input id="imgupload" name="image" type="file" accept="image/*" class="hidden" multiple />
+
+              <div class="previews" id="previews"></div>
+            </div>
+
+            <div>
+              <button id="saveBtn" type="submit" class="save-btn">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Auto date
+    const dateEl = document.getElementById('entry-date');
+    function formatDate(d) {
+      const opts = { day: '2-digit', month: 'long', year: 'numeric' };
+      return d.toLocaleDateString(undefined, opts);
+    }
+    const today = new Date();
+    dateEl.textContent = formatDate(today);
+
+    // Mood selection
+    const moodButtons = document.querySelectorAll('.mood-btn');
+    const moodInput = document.getElementById('moodInput');
+    let selectedMood = null;
+    moodButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        moodButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedMood = btn.dataset.mood;
+        moodInput.value = selectedMood;
+      });
+    });
+
+    // Image preview (optional)
+    const upload = document.getElementById('imgupload');
+    const previews = document.getElementById('previews');
+
+    upload.addEventListener('change', async (e) => {
+      previews.innerHTML = '';
+      const files = Array.from(e.target.files);
+      for (const f of files) {
+        if (!f.type.startsWith('image/')) continue;
+        const dataUrl = await fileToDataUrl(f);
+        const img = document.createElement('img');
+        img.className = 'preview-img';
+        img.src = dataUrl;
+        previews.appendChild(img);
+      }
+    });
+
+    function fileToDataUrl(file) {
+      return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    // Optional: intercept submit to show saving state and then submit.
+    const form = document.getElementById('entryForm');
+    const saveBtn = document.getElementById('saveBtn');
+    form.addEventListener('submit', (e) => {
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>

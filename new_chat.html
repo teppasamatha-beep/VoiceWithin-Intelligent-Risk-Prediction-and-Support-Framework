@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VoiceWithin — New Chat</title>
+<style>
+:root{--bg:#203040;--panel:#eaf1f8;--chat-white:#ffffff;--accent:#203040;--muted:#cfd8e1}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#1b2b36}
+
+/* Navbar */
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:#fff;color:#234;font-weight:bold}
+.logo{font-weight:bold;font-style:italic;font-size:20px;color:black}
+.nav-links{display:flex;align-items:center;gap:30px;font-weight:bold}
+.nav-item{position:relative;font-size:16px;font-weight:bold;color:#000;cursor:pointer}
+.nav-item a{text-decoration:none;color:black;font-weight:bold}
+.dropdown-content{display:none;position:absolute;top:100%;left:0;background:#f1f1f1;border:1px solid black;min-width:150px;z-index:1000}
+.dropdown-content a{display:block;padding:8px 12px;color:black;text-decoration:none}
+.dropdown-content a:hover{background:#ddd}
+.nav-item:hover .dropdown-content{display:block}
+.user-icon{width:28px;height:28px;border-radius:50%;background:#f1f1f1;border:1px solid #000;display:flex;justify-content:center;align-items:center;cursor:pointer}
+.user-icon::before{content:"👤";font-size:18px}
+.user-dropdown{right:0;left:auto}
+/* Rename Modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-content h3 {
+  margin: 0;
+  color: #203040;
+  text-align: center;
+}
+.modal-content input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.modal-buttons button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+#renameCancel {
+  background: #eee;
+}
+#renameSave {
+  background: #203040;
+  color: #fff;
+}
+
+/* Layout */
+.wrap{display:flex;height:calc(100vh - 80px);padding:28px;gap:18px}
+
+/* 🔹 Past Chats box */
+.left-col{
+  width:280px;                    /* slightly wider */
+  background:#ffffff;             /* white background */
+  border-radius:10px;
+  padding:12px;
+  box-shadow:0 6px 0px rgba(0,0,0,0.08) inset;  /* soft shadow */
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.left-col h3{margin:2px 0 4px;font-size:14px;color:#0f2130}
+.chat-list{list-style:none;padding:0;margin:0}
+.chat-list { list-style:none;padding:8px;margin:0;overflow:auto;flex:1;border-radius:8px;
+}
+.chat-list::-webkit-scrollbar{width:8px}
+.chat-list::-webkit-scrollbar-thumb{background:#e0e6eb;border-radius:8px}
+.chat-list li{
+  padding:10px 12px;border-radius:8px;margin-bottom:8px;cursor:pointer;color:#0b2430;font-size:13px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.chat-list li:hover{background:#f2f6fb}
+
+/* icons (hidden until hover) */
+.chat-item-left{display:flex;align-items:center;gap:8px}
+.chat-icons{display:none;gap:8px}
+.chat-list li:hover .chat-icons{display:flex}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f4f6f8;border:none;cursor:pointer}
+
+
+.right-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.chat-panel{width:820px;max-width:calc(100% - 40px);background:var(--chat-white);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:12px}
+.chat-header{display:flex;align-items:center;gap:8px;font-weight:600}
+.chat-header .title{background:#f6f8f9;padding:8px 10px;border-radius:8px;width:100%;color:#314554}
+.chat-area{border-radius:10px;padding:12px;min-height:360px;max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+
+/* Messages */
+.msg-row{display:flex;align-items:flex-start;gap:10px;position:relative}
+.msg-row.bot{justify-content:flex-start}
+.msg-row.user{justify-content:flex-end}
+.bubble{max-width:68%;border-radius:18px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;word-wrap:break-word}
+.bubble.bot{background:#fff;color:#0e2b3a}
+.bubble.user{background:#e3f0ff;color:#082034}
+.mini-pfp{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.mini-pfp.user{background:#e6f0ff;border:2px solid #d0e6ff}
+.quoted{background:#f5f7f8;border-left:3px solid var(--muted);padding:6px 8px;border-radius:6px;font-size:13px;color:#4b5b63}
+.msg-image{max-width:260px;border-radius:10px;display:block}
+
+/* Options */
+.options-menu{position:absolute;display:none;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.12);z-index:50;min-width:90px}
+.options-menu button{display:block;width:100%;padding:8px 10px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px}
+.options-menu button:hover{background:#f3f6f8}
+
+/* Input */
+.input-area{display:flex;flex-direction:column;gap:8px}
+.reply-bar{display:none;background:#f5f7f8;padding:8px 10px;border-left:3px solid var(--accent);border-radius:8px;font-size:13px;color:#21343b;align-items:center;justify-content:space-between}
+.reply-bar .close{cursor:pointer;padding-left:10px;color:#556}
+.input-row{display:flex;align-items:center;gap:10px;padding-top:6px}
+.camera-btn{display:flex;align-items:center;justify-content:center;width:46px;height:36px;border-radius:18px;background:#f3f6f8;border:1px solid #e2e8ee;cursor:pointer;position:relative}
+.camera-btn input{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.text-input{flex:1;padding:10px 14px;border-radius:18px;border:1px solid #e0e6eb;outline:none;font-size:14px}
+.send-btn{background:var(--accent);color:#fff;padding:8px 14px;border-radius:12px;border:none;cursor:pointer}
+
+/* Small screens */
+@media(max-width:900px){ .left-col{width:220px} .chat-panel{width:100%}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">VoiceWithin</div>
+  <div class="nav-links">
+    <div class="nav-item">
+      <a href="/journal">Journal ▾</a>
+      <div class="dropdown-content">
+        <a href="/journal">New Entry</a>
+        <a href="/history">History</a>
+      </div>
+    </div>
+
+    <div class="nav-item">
+      <a href="chatbot.html">AI </a>
+    </div>
+
+    <div class="nav-item"><a href="/QA">Test</a></div>
+
+    <div class="nav-item">
+      <div class="user-icon"></div>
+      <div class="dropdown-content user-dropdown">
+        <a href="/improvement">Dashboard</a>
+        <a href="/login">Log Out</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Rename Popup Modal -->
+<div id="renameModal" class="modal">
+  <div class="modal-content">
+    <h3>Rename Chat</h3>
+    <input type="text" id="renameInput" placeholder="Enter new name">
+    <div class="modal-buttons">
+      <button id="renameCancel">Cancel</button>
+      <button id="renameSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap">
+  <div class="left-col">
+    <h3>Past Chats</h3>
+    <ul class="chat-list" id="chatList"></ul>
+
+    <!-- new chat button still available -->
+    <button id="newChatBtn" style="margin-top:6px;padding:10px;border-radius:8px;border:none;background:#203040;color:#fff;cursor:pointer;">
+      + New Chat
+    </button>
+  </div>
+
+  <div class="right-col">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="title" id="chatTitle">@chat_name</div>
+      </div>
+
+      <div class="chat-area" id="chatArea"></div>
+
+      <div class="input-area">
+        <div class="reply-bar" id="replyBar">
+          <div class="small-muted" id="replyBarText">Replying to</div>
+          <div class="close" id="replyCancel">✖</div>
+        </div>
+
+        <div class="input-row">
+          <label class="camera-btn" title="Upload image">📷
+            <input id="imgInput" type="file" accept="image/*"/>
+          </label>
+          <input id="textInput" class="text-input" placeholder="Type Something.....">
+          <button id="sendBtn" class="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const STORAGE_KEY='voicewithin_chats_v1';
+const possibleNames=["Late Night Talks","Safe Space","Heart-to-Heart","Hey, I'm Here","A Cup of Calm","Gentle Talks","Mindful Minutes"];
+const openers=[
+"Hey, how's your day going?",
+"Hi! What are you up to today?",
+"Hello! How are you feeling right now?",
+"Hey there — what's on your mind?",
+"Hi! Anything you'd like to talk about today?"
+];
+
+let chats=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+let currentChat=null,replyTarget=null,editTarget=null,imgPending=null;
+
+const chatListEl=document.getElementById('chatList');
+const chatArea=document.getElementById('chatArea');
+const chatTitle=document.getElementById('chatTitle');
+const imgInput=document.getElementById('imgInput');
+const textInput=document.getElementById('textInput');
+const sendBtn=document.getElementById('sendBtn');
+const replyBar=document.getElementById('replyBar');
+const replyBarText=document.getElementById('replyBarText');
+const replyCancel=document.getElementById('replyCancel');
+function renameChat(oldName) {
+  const modal = document.getElementById('renameModal');
+  const input = document.getElementById('renameInput');
+  const saveBtn = document.getElementById('renameSave');
+  const cancelBtn = document.getElementById('renameCancel');
+
+  input.value = oldName;
+  modal.style.display = 'flex';
+  input.focus();
+
+  // Remove old event listeners first
+  saveBtn.replaceWith(saveBtn.cloneNode(true));
+  cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+
+  const newSaveBtn = document.getElementById('renameSave');
+  const newCancelBtn = document.getElementById('renameCancel');
+
+  newSaveBtn.addEventListener('click', () => {
+    const newName = input.value.trim();
+    if (!newName || newName === oldName || chats[newName]) {
+      modal.style.display = 'none';
+      return;
+    }
+    chats[newName] = chats[oldName];
+    delete chats[oldName];
+    saveChats();
+    renderChatList();
+    if (currentChat === oldName) {
+      currentChat = newName;
+      chatTitle.textContent = '@' + currentChat;
+    }
+    modal.style.display = 'none';
+  });
+
+  newCancelBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+}
+
+/* -----------------------------
+   STORAGE HELPERS
+----------------------------- */
+function saveChats(){localStorage.setItem(STORAGE_KEY,JSON.stringify(chats));}
+function pickUniqueName(){
+  const unused = possibleNames.filter(n => !chats[n]);
+  if (unused.length) return unused[Math.floor(Math.random()*unused.length)];
+  return possibleNames[Math.floor(Math.random()*possibleNames.length)] + ' ' + Date.now();
+}
+function pickOpener(){return openers[Math.floor(Math.random()*openers.length)];}
+
+/* -----------------------------
+   PAST CHATS RENDER
+----------------------------- */
+function renderChatList() {
+  chatListEl.innerHTML = '';
+
+  Object.keys(chats).forEach(name => {
+    const li = document.createElement('li');
+
+    const left = document.createElement('div');
+    left.className = 'chat-item-left';
+    left.textContent = name;
+
+    const icons = document.createElement('div');
+    icons.className = 'chat-icons';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'icon-btn';
+    editBtn.title = 'Edit name';
+    editBtn.innerHTML = '🖊️';
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      renameChat(name);
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'icon-btn';
+    delBtn.title = 'Delete chat';
+    delBtn.innerHTML = '🗑️';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteChat(name);
+    });
+
+    icons.appendChild(editBtn);
+    icons.appendChild(delBtn);
+    li.appendChild(left);
+    li.appendChild(icons);
+
+    li.addEventListener('click', () => {
+      currentChat = name;
+      chatTitle.textContent = '@' + currentChat;
+      renderMessages();
+    });
+
+    chatListEl.appendChild(li);
+  });
+}
+
+function renameChat(oldName) {
+  const newName = prompt("Rename chat:", oldName);
+  if (!newName || newName.trim() === '' || chats[newName]) return;
+  chats[newName] = chats[oldName];
+  delete chats[oldName];
+  saveChats();
+  renderChatList();
+  if (currentChat === oldName) {
+    currentChat = newName;
+    chatTitle.textContent = '@' + currentChat;
+  }
+}
+
+function deleteChat(name) {
+  if (confirm(`Delete chat "${name}"?`)) {
+    delete chats[name];
+    saveChats();
+    renderChatList();
+
+    // Also delete from MongoDB
+    fetch("/delete_chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_name: name })
+    }).then(res => res.json())
+      .then(data => console.log("🗑️ Mongo deletion:", data))
+      .catch(err => console.error("Mongo delete error:", err));
+
+    if (currentChat === name) {
+      currentChat = null;
+      chatArea.innerHTML = '';
+      chatTitle.textContent = '@chat_name';
+    }
+  }
+}
+
+
+
+/* -----------------------------
+   NEW CHAT CREATION
+----------------------------- */
+function createNewChatAndStart(){
+  const name=pickUniqueName();
+  chats[name]=[];
+  currentChat=name;
+  chatTitle.textContent='@'+currentChat;
+  renderChatList();
+  const botMsg={sender:'bot',text:pickOpener(),image:null,replyTo:null};
+  chats[currentChat].push(botMsg);
+  saveChats();
+  renderMessages();
+}
+
+/* -----------------------------
+   MESSAGES
+----------------------------- */
+function renderMessages(){
+  chatArea.innerHTML='';
+  if(!currentChat)return;
+  const messages=chats[currentChat]||[];
+  messages.forEach((m,idx)=>chatArea.appendChild(createRowElement(m,idx)));
+  chatArea.scrollTop=chatArea.scrollHeight;
+}
+
+function createRowElement(msgObj,idx){
+  const row=document.createElement('div');
+  row.className='msg-row '+(msgObj.sender==='bot'?'bot':'user');
+  row.dataset.idx=idx;
+
+  const pfp=document.createElement('div');
+  pfp.className='mini-pfp'+(msgObj.sender==='user'?' user':'');
+  pfp.title=msgObj.sender==='bot'?'Bot options':'Message options';
+  pfp.addEventListener('click',e=>openOptions(e,row,msgObj.sender));
+
+  const bubble=document.createElement('div');
+  bubble.className='bubble '+(msgObj.sender==='bot'?'bot':'user');
+
+  if(msgObj.replyTo){
+    const q=document.createElement('div');
+    q.className='quoted';
+    q.textContent=msgObj.replyTo;
+    bubble.appendChild(q);
+  }
+
+  if(msgObj.image){
+    const im=document.createElement('img');
+    im.className='msg-image';
+    im.src=msgObj.image;
+    bubble.appendChild(im);
+  }
+
+  if(msgObj.text){
+    const p=document.createElement('div');
+    p.className='msg-text';
+    p.textContent=msgObj.text;
+    bubble.appendChild(p);
+  }
+
+  const menu=document.createElement('div');
+  menu.className='options-menu';
+  if(msgObj.sender==='user'){
+    const editBtn=document.createElement('button');
+    editBtn.textContent='Edit';
+    editBtn.addEventListener('click',()=>{setEdit(idx);hideAllOptions();});
+    menu.appendChild(editBtn);
+  }
+  const replyBtn=document.createElement('button');
+  replyBtn.textContent='Reply';
+  replyBtn.addEventListener('click',()=>{setReply(idx);hideAllOptions();});
+  menu.appendChild(replyBtn);
+
+  if(msgObj.sender==='bot'){row.appendChild(pfp);row.appendChild(bubble);}
+  else{row.appendChild(bubble);row.appendChild(pfp);}
+  row.appendChild(menu);
+  return row;
+}
+
+/* -----------------------------
+   MESSAGE OPTIONS + REPLY
+----------------------------- */
+function openOptions(evt,row,who){
+  evt.stopPropagation();
+  hideAllOptions();
+  const menu=row.querySelector('.options-menu');
+  if(!menu)return;
+  menu.style.display='block';
+  if(who==='bot'){menu.style.left='12px';}
+  else{menu.style.right='12px';}
+}
+function hideAllOptions(){document.querySelectorAll('.options-menu').forEach(m=>m.style.display='none');}
+
+function setReply(index){
+  const msg=chats[currentChat][index];
+  if(!msg)return;
+  replyTarget={index,text:msg.text?msg.text:(msg.image?'Image':'')};
+  replyBarText.textContent=replyTarget.text.length>80?replyTarget.text.slice(0,80)+'…':replyTarget.text;
+  replyBar.style.display='flex';
+  textInput.focus();
+}
+function cancelReply(){replyTarget=null;replyBar.style.display='none';replyBarText.textContent='';}
+replyCancel.addEventListener('click',cancelReply);
+
+function setEdit(index){
+  const m=chats[currentChat][index];
+  if(!m)return;
+  textInput.value=m.text||'';
+  editTarget=index;
+  textInput.focus();
+}
+
+/* -----------------------------
+   SEND MESSAGE
+----------------------------- */
+sendBtn.addEventListener('click',onSend);
+textInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();onSend();}});
+
+function onSend(){
+  if(!currentChat)createNewChatAndStart();
+  const text=textInput.value.trim();
+
+  if(editTarget!==undefined&&editTarget!==null){
+    const target=chats[currentChat][editTarget];
+    if(target){target.text=text;saveChats();renderMessages();}
+    editTarget=null;textInput.value='';return;
+  }
+
+  if(imgPending){
+    const newMsg={sender:'user',text:text||'',image:imgPending,replyTo:replyTarget?replyTarget.text:null};
+    chats[currentChat].push(newMsg);
+    imgPending=null;imgInput.value='';
+    saveChats();renderMessages();cancelReply();textInput.value='';
+    botAutoReply(newMsg.text||'Image');return;
+  }
+
+  if(!text)return;
+  const newMsg={sender:'user',text,image:null,replyTo:replyTarget?replyTarget.text:null};
+  chats[currentChat].push(newMsg);
+  saveChats();renderMessages();cancelReply();textInput.value='';
+  botAutoReply(text);
+}
+
+/* -----------------------------
+   BOT REPLY
+----------------------------- */
+/* -----------------------------
+   BOT REPLY (Connected to Flask)
+----------------------------- */
+async function botAutoReply(userText) {
+  try {
+    // Send user message to Flask backend
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: userText,
+        chat_name: currentChat || "default"
+      })
+    });
+
+    const data = await response.json();
+
+    const botMsg = {
+      sender: 'bot',
+      text: data.reply || "I'm here for you 💙",
+      image: null,
+      replyTo: userText ? (userText.length > 80 ? userText.slice(0, 80) + "…" : userText) : null
+    };
+
+    // Save to local & re-render
+    chats[currentChat].push(botMsg);
+    saveChats();
+    renderMessages();
+
+  } catch (err) {
+    console.error("Error getting reply:", err);
+    const botMsg = {
+      sender: 'bot',
+      text: "Sorry, I’m having trouble responding right now 😔",
+      image: null,
+      replyTo: userText
+    };
+    chats[currentChat].push(botMsg);
+    saveChats();
+    renderMessages();
+  }
+}
+
+
+/* -----------------------------
+   IMAGE UPLOAD
+----------------------------- */
+imgInput.addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){imgPending=ev.target.result;onSend();};
+  reader.readAsDataURL(f);
+});
+// NEW CHAT button setup
+const newChatBtn = document.getElementById('newChatBtn');
+newChatBtn.addEventListener('click', () => {
+  createNewChatAndStart();
+});
+
+/* -----------------------------
+   INIT
+----------------------------- */
+function init(){
+  renderChatList();
+  createNewChatAndStart();
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.mini-pfp')&&!e.target.closest('.options-menu'))hideAllOptions();
+});
+window.addEventListener('load',init);
+</script>
+</body>
+</html>

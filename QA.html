@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Survey</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #234;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+        .warning-box {
+    position: fixed;       /* stays at the top */
+    top: 0;
+    left: 0;
+    width: 100%;           /* full width */
+    background-color: #fff3cd;
+    color: #856404;
+    border-bottom: 1px solid #ffeeba;
+    padding: 12px 16px;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    text-align: center;
+    z-index: 1000;         /* keeps it above everything */
+  }
+    .form-container, .survey-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: left;
+      display: none;
+    }
+    h2 { margin-bottom: 20px; }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: left;
+    }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #345;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .form-buttons { display: flex; justify-content: flex-end; margin-top: 25px; }
+    .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; text-align: left; }
+    label.option { display: flex; align-items: center; cursor: pointer; font-weight: normal; }
+    input[type="radio"] { margin-right: 10px; }
+    .buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+    #prevBtn { margin-right: auto; }
+    #nextBtn { margin-left: auto; }
+    #backToFormBtn { background-color: #234; display: none; }
+  </style> 
+  
+  <!-- Step 1: Gender + Age -->
+  <div class="form-container" id="step1">
+    <h2>Tell us about yourself</h2>
+    <form id="formStep1">
+      <label>Q1. Choose your gender?</label>
+      <div>
+        <label><input type="radio" name="gender" value="Male" required /> Male</label>
+        <label><input type="radio" name="gender" value="Female" required /> Female</label>
+      </div>
+      <label for="age">Q2. What is your age?</label>
+<input 
+  type="number" 
+  id="age" 
+  name="age" 
+  required 
+  min="1" 
+  step="1" 
+  inputmode="numeric"
+  style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"
+  onfocus="this.select();"
+/>
+
+
+      <div class="form-buttons"><button type="submit">Next</button></div>
+    </form>
+  </div>
+  <!-- Warning -->
+  <div id="qna-warning" class="warning-box">
+  You cannot logout until you complete all QnA questions.
+  </div>
+
+  <!-- Step 2: Course + Year -->
+  <div class="form-container" id="step2">
+    <h2>Education Details</h2>
+    <form id="formStep2">
+      <label for="course">Q3. What is your current course / major?</label>
+      <input type="text" id="course" name="course" required />
+      <label for="year">Q4. Which year are you currently in?</label>
+      <select id="year" name="year" required>
+        <option value="">--Select Year--</option>
+        <option value="First">First</option>
+        <option value="Second">Second</option>
+        <option value="Third">Third</option>
+        <option value="Fourth">Fourth</option>
+      </select>
+      <div class="form-buttons"><button type="submit">Next</button></div>
+    </form>
+  </div>
+
+  <!-- Step 3: Survey -->
+  <div class="survey-container" id="step3">
+    <h2 id="questionText"></h2>
+    <div class="options" id="optionsContainer"></div>
+    <div class="buttons">
+      <button id="backToFormBtn">Previous</button>
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+    </div>
+  </div>
+
+  <script>
+    const userData = {};
+    let currentQuestion = 0;
+    document.getElementById("step1").style.display = "block";
+
+    document.getElementById("formStep1").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const gender = document.querySelector('input[name="gender"]:checked');
+      userData["Choose your gender"] = gender ? gender.value : "";
+      userData["Age"] = document.getElementById("age").value.trim();
+      document.getElementById("step1").style.display = "none";
+      document.getElementById("step2").style.display = "block";
+    });
+
+    document.getElementById("formStep2").addEventListener("submit", function(e) {
+      e.preventDefault();
+      userData["What is your course?"] = document.getElementById("course").value.trim();
+      userData["Your current year"] = document.getElementById("year").value.trim();
+      document.getElementById("step2").style.display = "none";
+      document.getElementById("step3").style.display = "block";
+      renderQuestion(currentQuestion);
+    });
+
+    const questions = [
+     { text: "Q5. Do you have Depression?", field: "Do you have Depression?", options: ["Yes", "No"] },
+      { text: "Q6. Do you have Anxiety?", field: "Do you have Anxiety?", options: ["Yes", "No"] },
+      { text: "Q7. Do you have Panic attack?", field: "Do you have Panic attack?", options: ["Yes", "No"] },
+      { text: "Q8. Did you seek any specialist for a treatment?", field: "Did you seek any specialist for a treatment?", options: ["Yes", "No"] },
+      { text: "Q9. Have you ever experienced thoughts of ending your life (suicidal ideation)?", field: "Have you ever experienced thoughts of ending your life (suicidal ideation)?", options: ["Never","Rarely","Sometimes","Often","Always"] },
+      { text: "Q10. Have you ever attempted to end your life in the past?", field: "Have you ever attempted to end your life in the past?", options: ["Yes", "No"] },
+      { text: "Q11. Have you ever intentionally harmed yourself (e.g., cutting, burning, etc.)?", field: "Have you ever intentionally harmed yourself (e.g., cutting, burning, etc.)?", options: ["Yes", "No"] },
+      { text: "Q12. Do you currently feel hopeless about your future?", field: "Do you currently feel hopeless about your future?", options: ["Never","Rarely","Sometimes","Often","Always"] },
+      { text: "Q13. Have you ever experienced bullying (in person or online) that negatively affected your mental health?", field: "Have you ever experienced bullying (in person or online) that negatively affected your mental health?", options: ["Yes","No"] },
+      { text: "Q14. Are you currently experiencing serious family-related issues (e.g., conflict, abuse, divorce, financial stress)?", field: "Are you currently experiencing serious family-related issues (e.g., conflict, abuse, divorce, financial stress)?", options: ["Yes","No"] },
+      { text: "Q15. Have you used substances (e.g., alcohol, tobacco, recreational drugs) to cope with stress or emotions?", field: "Have you used substances (e.g., alcohol, tobacco, recreational drugs) to cope with stress or emotions?", options: ["Yes", "No"] }
+    ];
+
+    const questionText = document.getElementById("questionText");
+    const optionsContainer = document.getElementById("optionsContainer");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const backToFormBtn = document.getElementById("backToFormBtn");
+
+    function renderQuestion(index) {
+      const q = questions[index];
+      questionText.textContent = q.text;
+      optionsContainer.innerHTML = "";
+      q.options.forEach(option => {
+        const label = document.createElement("label");
+        label.classList.add("option");
+        const input = document.createElement("input");
+        input.type = "radio"; input.name = "response"; input.value = option;
+        label.appendChild(input); label.appendChild(document.createTextNode(option));
+        optionsContainer.appendChild(label);
+      });
+      nextBtn.textContent = index === questions.length - 1 ? "Submit" : "Next";
+      backToFormBtn.style.display = index === 0 ? "inline-block" : "none";
+      prevBtn.style.display = index === 0 ? "none" : "inline-block";
+    }
+
+    function goToNextQuestion() {
+      const selected = document.querySelector('input[name="response"]:checked');
+      if (!selected) { alert("Please select an option before proceeding."); return; }
+      const q = questions[currentQuestion];
+      userData[q.field] = selected.value;
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        renderQuestion(currentQuestion);
+      } else {
+        fetch("/predict", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(userData)
+})
+.then(res => res.json())
+.then(data => {
+  if (data.redirect) {
+    window.location.href = data.redirect;  // Go to Flask result page
+  }
+})
+.catch(err => alert("Error: " + err));
+
+      }
+    }
+
+    function goToPrevQuestion() { if (currentQuestion > 0) { currentQuestion--; renderQuestion(currentQuestion); } }
+    nextBtn.addEventListener("click", goToNextQuestion);
+    prevBtn.addEventListener("click", goToPrevQuestion);
+    backToFormBtn.addEventListener("click", function() {
+      document.getElementById("step3").style.display = "none";
+      document.getElementById("step2").style.display = "block";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #234;
+      color: white;
+      text-align: center;
+    }
+
+    /* ---------------- HEADER NAVBAR ---------------- */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      font-weight: bold;
+      padding: 20px 30px;
+    }
+
+    .logo {
+      font-weight: bold;
+      font-style: italic;
+      font-size: 20px;
+      color: black;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      font-weight: bold;
+    }
+
+    .nav-item {
+      position: relative;
+      font-size: 16px;
+      font-weight: bold;
+      color: #000 ;
+      cursor: pointer;
+    }
+
+    .nav-item a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+    }
+
+    /* Dropdowns */
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #f1f1f1;
+      border: 1px solid black;
+      min-width: 150px;
+      z-index: 1000;
+    }
+
+    .dropdown-content a {
+      display: block;
+      padding: 8px 12px;
+      color: black;
+      text-decoration: none;
+    }
+
+    .dropdown-content a:hover {
+      background-color: #f1f1f1;
+    }
+
+    .nav-item:hover .dropdown-content {
+      display: block;
+    }
+
+    /* User icon */
+    .user-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #f1f1f1f1;
+      border: 1px solid #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .user-icon::before {
+      content: "👤";
+      font-size: 18px;
+    }
+
+    .user-dropdown {
+      right: 0;
+      left: auto;
+    }
+
+    /* Result Section */
+    .result-section {
+      margin-top: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .result-title {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+
+    .result-card {
+      background-color: white;
+      color: black;
+      padding: 40px;
+      border-radius: 20px;
+      width: 600px;
+      max-width: 95%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .result-card h3 {
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+
+    .result-card p {
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    /* Footer Notes */
+    .note {
+      margin-top: 35px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .sub-note {
+      margin-top: 12px;
+      font-size: 18px;
+      opacity: 0.95;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">VoiceWithin</div>
+    <div class="nav-links">
+      <!-- Journal Dropdown -->
+      <div class="nav-item">
+        <a href="/journal">Journal</a>
+        <div class="dropdown-content">
+          <a href="/history">History</a>
+          <a href="/journal">New Entry</a>
+        </div>
+      </div>
+
+      <!-- AI -->
+      <div class="nav-item">
+        <a href="chatbot">AI</a>
+      </div>
+
+
+    <!-- TEST -->
+      <div class="nav-item">
+        <a href="/survey">Test</a>
+      </div>
+
+      <!-- User Dropdown -->
+      <div class="nav-item">
+        <div class="user-icon"></div>
+        <div class="dropdown-content user-dropdown">
+          <a href="/improvement">Dashboard</a>
+          <a href="/login">Log Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div class="result-section">
+    <div class="result-title">Result</div>
+    <div class="result-card">
+  <h3>Predicted Risk: {{ prediction }}</h3>
+  <p>{{ suggestion }}</p>
+</div>
+    <div class="note">Make sure to check our website to explore more features!</div>
+    <div class="sub-note">Track your progress and see improvements in your dashboard.</div>
+  </div>
+</body>
+</html>
