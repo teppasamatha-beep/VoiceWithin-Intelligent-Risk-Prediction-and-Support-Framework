@@ -31,7 +31,7 @@ app.secret_key = "supersecretkey"  # change in production
 
 MONGO_URI = os.getenv(
     "MONGO_URI",
-    "mongodb+srv://Samatha:Samatha26@cluster0.x7razut.mongodb.net/?appName=Cluster0"
+    "mongodb+srv:your mongodb link"
 )
 client = MongoClient(MONGO_URI)
 db = client["SSP"]
@@ -46,8 +46,8 @@ fs = gridfs.GridFS(db, collection="images")
 # ==========================================================
 # VAPID / Notifications
 # ==========================================================
-VAPID_PUBLIC_KEY = "BK5IfpSj2hRtPdW13Q_66kLtypJSDpValC5LoED7ylls4ECXz9reQm9CIyp35uc2kCbnZImnQtv0eU9oYCMDll8"
-VAPID_PRIVATE_KEY = "g9NKsBaz2wbb313JhSShqQg5sbZMmbMyd_K2GEt483c"
+VAPID_PUBLIC_KEY = "give your key"
+VAPID_PRIVATE_KEY = "give your key"
 VAPID_CLAIMS = {"sub": "mailto:youremail@example.com"}
 
 MESSAGES = [
@@ -620,3 +620,4 @@ def ping():
 # ==========================================================
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
