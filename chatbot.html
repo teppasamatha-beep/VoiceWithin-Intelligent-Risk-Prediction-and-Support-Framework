@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VoiceWithin — New Chat</title>
+<style>
+:root{--bg:#203040;--panel:#eaf1f8;--chat-white:#ffffff;--accent:#203040;--muted:#cfd8e1}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#1b2b36}
+
+/* Navbar */
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:#fff;color:#234;font-weight:bold}
+.logo{font-weight:bold;font-style:italic;font-size:20px;color:black}
+.nav-links{display:flex;align-items:center;gap:30px;font-weight:bold}
+.nav-item{position:relative;font-size:16px;font-weight:bold;color:#000;cursor:pointer}
+.nav-item a{text-decoration:none;color:black;font-weight:bold}
+.dropdown-content{display:none;position:absolute;top:100%;left:0;background:#f1f1f1;border:1px solid black;min-width:150px;z-index:1000}
+.dropdown-content a{display:block;padding:8px 12px;color:black;text-decoration:none}
+.dropdown-content a:hover{background:#ddd}
+.nav-item:hover .dropdown-content{display:block}
+.user-icon{width:28px;height:28px;border-radius:50%;background:#f1f1f1;border:1px solid #000;display:flex;justify-content:center;align-items:center;cursor:pointer}
+.user-icon::before{content:"👤";font-size:18px}
+.user-dropdown{right:0;left:auto}
+/* Rename Modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-content h3 {
+  margin: 0;
+  color: #203040;
+  text-align: center;
+}
+.modal-content input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.modal-buttons button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+#renameCancel {
+  background: #eee;
+}
+#renameSave {
+  background: #203040;
+  color: #fff;
+}
+
+/* Layout */
+.wrap{display:flex;height:calc(100vh - 80px);padding:28px;gap:18px}
+
+/* 🔹 Past Chats box */
+.left-col{
+  width:280px;                    /* slightly wider */
+  background:#ffffff;             /* white background */
+  border-radius:10px;
+  padding:12px;
+  box-shadow:0 6px 0px rgba(0,0,0,0.08) inset;  /* soft shadow */
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.left-col h3{margin:2px 0 4px;font-size:14px;color:#0f2130}
+.chat-list{list-style:none;padding:0;margin:0}
+.chat-list { list-style:none;padding:8px;margin:0;overflow:auto;flex:1;border-radius:8px;
+}
+.chat-list::-webkit-scrollbar{width:8px}
+.chat-list::-webkit-scrollbar-thumb{background:#e0e6eb;border-radius:8px}
+.chat-list li{
+  padding:10px 12px;border-radius:8px;margin-bottom:8px;cursor:pointer;color:#0b2430;font-size:13px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.chat-list li:hover{background:#f2f6fb}
+
+/* icons (hidden until hover) */
+.chat-item-left{display:flex;align-items:center;gap:8px}
+.chat-icons{display:none;gap:8px}
+.chat-list li:hover .chat-icons{display:flex}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f4f6f8;border:none;cursor:pointer}
+
+
+.right-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.chat-panel{width:820px;max-width:calc(100% - 40px);background:var(--chat-white);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:12px}
+.chat-header{display:flex;align-items:center;gap:8px;font-weight:600}
+.chat-header .title{background:#f6f8f9;padding:8px 10px;border-radius:8px;width:100%;color:#314554}
+.chat-area{border-radius:10px;padding:12px;min-height:360px;max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+
+/* Messages */
+.msg-row{display:flex;align-items:flex-start;gap:10px;position:relative}
+.msg-row.bot{justify-content:flex-start}
+.msg-row.user{justify-content:flex-end}
+.bubble{max-width:68%;border-radius:18px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;word-wrap:break-word}
+.bubble.bot{background:#fff;color:#0e2b3a}
+.bubble.user{background:#e3f0ff;color:#082034}
+.mini-pfp{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.mini-pfp.user{background:#e6f0ff;border:2px solid #d0e6ff}
+.quoted{background:#f5f7f8;border-left:3px solid var(--muted);padding:6px 8px;border-radius:6px;font-size:13px;color:#4b5b63}
+.msg-image{max-width:260px;border-radius:10px;display:block}
+
+/* Options */
+.options-menu{position:absolute;display:none;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.12);z-index:50;min-width:90px}
+.options-menu button{display:block;width:100%;padding:8px 10px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px}
+.options-menu button:hover{background:#f3f6f8}
+
+/* Input */
+.input-area{display:flex;flex-direction:column;gap:8px}
+.reply-bar{display:none;background:#f5f7f8;padding:8px 10px;border-left:3px solid var(--accent);border-radius:8px;font-size:13px;color:#21343b;align-items:center;justify-content:space-between}
+.reply-bar .close{cursor:pointer;padding-left:10px;color:#556}
+.input-row{display:flex;align-items:center;gap:10px;padding-top:6px}
+.camera-btn{display:flex;align-items:center;justify-content:center;width:46px;height:36px;border-radius:18px;background:#f3f6f8;border:1px solid #e2e8ee;cursor:pointer;position:relative}
+.camera-btn input{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.text-input{flex:1;padding:10px 14px;border-radius:18px;border:1px solid #e0e6eb;outline:none;font-size:14px}
+.send-btn{background:var(--accent);color:#fff;padding:8px 14px;border-radius:12px;border:none;cursor:pointer}
+
+/* Small screens */
+@media(max-width:900px){ .left-col{width:220px} .chat-panel{width:100%}}
+
+.typing {
+  font-style: italic;
+  color: #888;
+  margin: 10px;
+}
+
+.dots::after {
+  content: '';
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">VoiceWithin</div>
+  <div class="nav-links">
+    <div class="nav-item">
+      <a href="/journal">Journal ▾</a>
+      <div class="dropdown-content">
+        <a href="/journal">New Entry</a>
+        <a href="/history">History</a>
+      </div>
+    </div>
+
+    <div class="nav-item">
+      <a href="chatbot.html">AI </a>
+    </div>
+
+    <div class="nav-item"><a href="/QA">Test</a></div>
+
+    <div class="nav-item">
+      <div class="user-icon"></div>
+      <div class="dropdown-content user-dropdown">
+        <a href="/improvement">Dashboard</a>
+        <a href="/login">Log Out</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Rename Popup Modal -->
+<div id="renameModal" class="modal">
+  <div class="modal-content">
+    <h3>Rename Chat</h3>
+    <input type="text" id="renameInput" placeholder="Enter new name">
+    <div class="modal-buttons">
+      <button id="renameCancel">Cancel</button>
+      <button id="renameSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap">
+  <div class="left-col">
+    <h3>Past Chats</h3>
+    <ul class="chat-list" id="chatList"></ul>
+
+    <!-- new chat button still available -->
+    <button id="newChatBtn" style="margin-top:6px;padding:10px;border-radius:8px;border:none;background:#203040;color:#fff;cursor:pointer;">
+      + New Chat
+    </button>
+  </div>
+
+  <div class="right-col">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="title" id="chatTitle">@chat_name</div>
+      </div>
+
+      <div class="chat-area" id="chatArea"></div>
+
+      <div class="input-area">
+        <div class="reply-bar" id="replyBar">
+          <div class="small-muted" id="replyBarText">Replying to</div>
+          <div class="close" id="replyCancel">✖</div>
+        </div>
+
+      
+
+        <div class="input-row">
+          <label class="camera-btn" title="Upload image">📷
+            <input id="imgInput" type="file" accept="image/*"/>
+          </label>
+          <input id="textInput" class="text-input" placeholder="Type Something.....">
+          <button id="sendBtn" class="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="hidden" id="loggedEmail" value="{{ email }}">
+<input type="hidden" id="loggedUser" value="{{ username }}">
+
+
+<script>
+/* ===============================
+   USER-SAFE CHAT SYSTEM
+================================ */
+
+const email = document.getElementById("loggedEmail").value;
+const username = document.getElementById("loggedUser").value;
+
+let chats = {};
+let currentChat = null;
+
+/* ELEMENTS */
+const chatListEl = document.getElementById("chatList");
+const chatArea = document.getElementById("chatArea");
+const chatTitle = document.getElementById("chatTitle");
+const textInput = document.getElementById("textInput");
+const sendBtn = document.getElementById("sendBtn");
+const newChatBtn = document.getElementById("newChatBtn");
+
+/* LOAD CHATS FROM SERVER (PER USER) */
+async function loadChats() {
+  const res = await fetch("/get_chats");
+  chats = await res.json();
+  renderChatList();
+}
+
+/* RENDER CHAT LIST */
+function renderChatList() {
+  chatListEl.innerHTML = "";
+  Object.keys(chats).forEach(name => {
+    const li = document.createElement("li");
+    li.textContent = name;
+    li.onclick = () => openChat(name);
+    chatListEl.appendChild(li);
+  });
+}
+
+/* OPEN CHAT */
+function openChat(name) {
+  currentChat = name;
+  chatTitle.textContent = "@" + name;
+  chatArea.innerHTML = "";
+
+  chats[name].forEach(m => {
+    addMessage(m.sender, m.text);
+  });
+}
+
+/* MESSAGE UI */
+function addMessage(sender, text) {
+  const row = document.createElement("div");
+  row.className = "msg-row " + sender;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble " + sender;
+  bubble.textContent = text;
+
+  row.appendChild(bubble);
+  chatArea.appendChild(row);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  
+}
+let typingRow = null;
+
+function showTyping() {
+  typingRow = document.createElement("div");
+  typingRow.className = "msg-row bot";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble bot typing";
+  bubble.textContent = "VoiceWithin is typing...";
+
+  typingRow.appendChild(bubble);
+  chatArea.appendChild(typingRow);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function hideTyping() {
+  if (typingRow) {
+    typingRow.remove();
+    typingRow = null;
+  }
+}
+
+/* SEND MESSAGE */
+sendBtn.onclick = async () => {
+  const text = textInput.value.trim();
+  if (!text) return;
+
+  if (!currentChat) {
+    currentChat = text.substring(0, 30);
+    chats[currentChat] = [];
+    renderChatList();
+    chatTitle.textContent = "@" + currentChat;
+  }
+
+  addMessage("user", text);
+  chats[currentChat].push({ sender: "user", text });
+  textInput.value = "";
+
+  // ✅ show typing INSIDE chat
+  showTyping();
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_name: currentChat,
+        message: text
+      })
+    });
+
+    const data = await res.json();
+
+    // ✅ remove typing BEFORE showing reply
+    hideTyping();
+
+    addMessage("bot", data.reply);
+    chats[currentChat].push({ sender: "bot", text: data.reply });
+
+  } catch (err) {
+    hideTyping();
+    addMessage("bot", "⚠️ Sorry, something went wrong.");
+  }
+};
+
+
+/* NEW CHAT */
+newChatBtn.onclick = () => {
+  currentChat = null;
+  chatArea.innerHTML = "";
+  chatTitle.textContent = "@chat_name";
+};
+
+/* ENTER KEY */
+textInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+/* INIT */
+window.onload = () => {
+  loadChats();
+};
+</script>
+
+
+</body>
+</html>
